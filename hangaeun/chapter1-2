@@ -1,0 +1,193 @@
+# 1~2장 정리노트
+
+---
+
+2026.09.07 한가은
+
+## SVR
+
+SVR? SVM을 회귀에 맞게 확장
+
+일반적인 회귀는 예측선과 실제값 사이의 오차를 최대한 줄이는 게 목표
+오차? → 손실
+
+SVR 예측선 하나를 딱 긋는 대신, 그 선 주위에 폭이 있는 관을(=엡실론-비민감 튜브) 만듦
+이 관 안에 들어오는 오차는 아예 신경 쓰지 않고, 관 밖으로 벗어난 점들만 손실로 계산
+
+SVR 손실함수 (y: 실제값, f(x): 예측값, ε: 튜브의 반폭)
+
+```
+L(y, f(x)) = 0                    (|y - f(x)| ≤ ε 일 때 — 튜브 안, 손실 없음)
+L(y, f(x)) = |y - f(x)| - ε       (그 밖일 때 — 벗어난 만큼만 손실)
+```
+
+튜브 안에 들어오는 예측은 받아들일 수 있는 것으로 보고 아무 손실도 주지 않으며, 튜브 밖으로 벗어난 예측만 손실로 계산
+
+→데이터가 아무리 많아도 실제로 모델을 좌우하는 건 경계 근처의 소수 데이터
+
+전체 훈련 데이터 중 일부(서포트 벡터)만으로 예측 함수가 결정
+
+## 하이퍼파라미터
+
+**epsilon (ε)** — 튜브의 폭
+
+튜브 안에서는 예측이 실제값과 epsilon만큼 떨어져 있어도 훈련 손실에 아무 페널티가 붙지 않음
+
+즉ε이 크면 튜브가 두꺼워져서 웬만한 오차는 다 봐주고(모델 단순), 
+ε이 작으면 튜브가 얇아져 더 엄격하게 맞추려 함
+
+ scikit-learn
+
+**C** — 튜브 밖으로 벗어난 점을 얼마나 혼낼지
+
+C값이 클수록 훈련 데이터에 더 딱 맞추려 해서 과대적합 위험이 커지고, 
+C값이 작을수록 더 매끈하고 완만한 예측 곡선이 됨
+C는 "튜브 폭 대 위반 허용치" 사이의 트레이드오프를 조절하는 값이라고 보면 됨
+
+gamma (γ, rbf 커널 전용)
+
+gamma는 RBF 커널에서 각 훈련 데이터가 영향을 미치는 반경을 결정
+gamma가 크면 가까운 이웃에만 민감하게 반응하는 구불구불한 곡선이 되고(과대적합 위험), 
+gamma가 작으면 멀리까지 영향을 미쳐 더 매끈한 곡선이 됨
+
+RBF(Radial Basis Function, 방사기저함수) 커널? 
+두 데이터 포인트 사이의 유사도(닮은 정도)를 유클리드 거리를 기반으로 계산하는 커널 함수
+
+두 점 x, y 사이의 RBF 커널값
+
+```
+K(x, y) = exp(-γ * ||x - y||²)
+```
+
+ `||x - y||`는 두 점 사이의 (보통의) 거리이고, γ(감마)는  조절 파라미터
+
+거리가 가까울수록 값이 1에 가깝고, 
+멀어질수록 급격히 0에 가까워지는 종 모양(가우시안) 곡선을 만듦
+ "거리"를 "닮음 정도(similarity score)"로 바꿔주는 함수
+
+- 두 점이 완전히 같으면(`||x-y||=0`) → `exp(0) = 1` (최대 유사도)
+- 두 점이 아주 멀면 → `exp(매우 큰 음수) ≈ 0` (유사도 거의 없음)
+
+## 연습문제
+
+### 연습문제 1: SVR 하이퍼파라미터 튜닝
+
+```python
+from sklearn.model_selection import GridSearchCV
+from sklearn.svm import SVR
+from sklearn.pipeline import Pipeline
+
+param_grid = [
+    {
+        "svr__kernel": ["linear"],
+        "svr__C": [10.0, 30.0, 100.0, 300.0, 1000.0, 3000.0, 10000.0, 30000.0],
+    },
+    {
+        "svr__kernel": ["rbf"],
+        "svr__C": [1.0, 3.0, 10.0, 30.0, 100.0, 300.0, 1000.0],
+        "svr__gamma": [0.01, 0.03, 0.1, 0.3, 1.0, 3.0],
+    },
+]
+
+svr_pipeline = Pipeline([("preprocessing", preprocessing), ("svr", SVR())])
+
+grid_search = GridSearchCV(
+    svr_pipeline,
+    param_grid,
+    cv=3,
+    scoring="neg_root_mean_squared_error",
+)
+
+grid_search.fit(housing.iloc[:5000], housing_labels.iloc[:5000])
+```
+
+# SVR로 캘리포니아 집값을 예측할 때, kernel/C/gamma 조합 중 어떤 게 제일 좋은지 GridSearchCV로 찾기
+
+- linear 커널은 C값 8가지만 시도하면 되지만, 
+rbf 커널은 C 7가지 × gamma 6가지 = 42가지 조합을 다 시도해야 함 여기에 3-fold 교차검증까지 곱하면 실제로는 수백 번 모델을 훈련시켜야 해서 시간이 오래 걸림
+- → 데이터 전체(2만 개 가까이)가 아니라 앞 5,000개만, 폴드도 3개로 줄이기
+
+아무리 좋은 조합을 찾아도 SVR은 랜덤포레스트보다  성능이 나쁨 
+
+→ 주택 데이터셋(변수가 여러 개 섞인 테이블 데이터, 비균질한 지역 패턴)에는 
+나무 기반 앙상블(랜덤포레스트)이 원래 더 유리한 경우가 많다고 함
+
+### 연습문제 3: SelectFromModel로 특성 선택
+
+!image.png
+
+```python
+from sklearn.feature_selection import SelectFromModel
+from sklearn.pipeline import Pipeline
+from sklearn.svm import SVR
+
+selector_pipeline = Pipeline(
+    [
+        ("preprocessing", preprocessing),
+        (
+            "selector",
+            SelectFromModel(
+                RandomForestRegressor(random_state=42),
+                threshold=0.005,  # min feature importance
+            ),
+        ),
+        (
+            "svr",
+            SVR(
+                C=rnd_search.best_params_["svr__C"],
+                gamma=rnd_search.best_params_["svr__gamma"],
+                kernel=rnd_search.best_params_["svr__kernel"],
+            ),
+        ),
+    ]
+)
+```
+
+# 전처리 파이프라인 끝에 "덜 중요한 특성은 자동으로 걸러내는" 단계를 추가해보기.
+
+- `SelectFromModel`은 랜덤포레스트를 한 번 훈련시켜서 각 특성의 중요도(`feature_importances_`)를 구한 뒤, 정해둔 기준보다 중요도가 낮은 특성은 아예 버림
+- 특성이 너무 많거나 노이즈가 많은 데이터에서는 이렇게 걸러내면 모델이 더 단순해지고 성능도 좋아질 수 있음
+
+! 이 데이터셋에서는 오히려 도움이 안 됨 
+
+→이미 특성 개수가 적당하고(전처리 과정에서 이미 잘 설계된 특성들), 
+   서로 다른 특성이 저마다 조금씩 다른 정보를 담고 있어서 일부를 버리면 오히려 정보 손실이 생기기 때문
+
+### 연습문제 4: KNN 예측값을 새로운 특성으로 만들기
+
+```python
+from sklearn.feature_selection import SelectFromModel
+from sklearn.pipeline import Pipeline
+from sklearn.svm import SVR
+
+selector_pipeline = Pipeline(
+    [
+        ("preprocessing", preprocessing),
+        (
+            "selector",
+            SelectFromModel(
+                RandomForestRegressor(random_state=42),
+                threshold=0.005,  # min feature importance
+            ),
+        ),
+        (
+            "svr",
+            SVR(
+                C=rnd_search.best_params_["svr__C"],
+                gamma=rnd_search.best_params_["svr__gamma"],
+                kernel=rnd_search.best_params_["svr__kernel"],
+            ),
+        ),
+    ]
+)
+```
+
+#  위도·경도만 보고 그 지역의 median_income을 예측하는" 작은 KNN 모델을 만들어서, 그 예측값 자체를 새로운 입력 특성으로 쓰는 커스텀 변환기를 만들기.
+
+- 아이디어 어떤 지역의 소득 수준은 보통 주변 지역과 비슷(부자 동네 옆은 부자 동네인 경향).
+ K-최근접 이웃(KNN) 회귀는 "가까운 K개 지역의 평균값"으로 예측하는 방식이라, 이걸 이용하면 "주변 지역들과 평활화된 소득 수준"이라는 새 특성을 만들 수 있음
+- 이 변환기는 `fit()`에서 KNN 회귀 모델을 학습시키고, `transform()`에서는 그 학습된 KNN으로 예측한 값을 새로운 컬럼으로 내보냄
+- `MetaEstimatorMixin`을 쓰는 이유? 변환기 안에 다른 추정기(KNN 등)를 통째로 넣고 있는데, 이 믹스인을 쓰면 scikit-learn이 내부 추정기의 하이퍼파라미터(예: KNN의 이웃 수)까지 `GridSearchCV`/`RandomizedSearchCV`로 튜닝할 수 있게 자동으로 노출
+
+이전에 만들었던 "위경도 기반 군집(KMeans) + 유사도" 방식보다 성능이 떨어짐..
+지역을 하나의 예측값(소득)으로 뭉개는 것보다, 여러 군집 중심까지의 거리 정보를 그대로 특성으로 넘기는 쪽이 더 풍부한 지리 정보를 담고 있었음

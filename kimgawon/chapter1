@@ -1,0 +1,193 @@
+Chapter 1. The Machine Learning Landscape
+
+1. What is Machine Learning?
+
+머신러닝 : 컴퓨터가 데이터를 통해 학습하여 특정 작업의 성능을 향상시키는 것
+
+- Training set : 학습 데이터 전체
+- Training instance / sample : 각각의 학습 데이터
+- Model : 데이터를 학습하고 예측하는 시스템
+- Performance measure : 모델 성능 평가 기준
+- Accuracy : 분류 문제에서 자주 사용하는 정확도
+
+1. Why Use Machine Learning?
+- 사람이 직접 규칙을 만들기 너무 복잡한 문제일 때
+- 기존 알고리즘으로 해결하기 어려운 문제일 때
+- 계속 변화하는 환경일 때
+- 대량의 데이터에서 패턴을 발견하는 문제일 때
+
+데이터에서 숨겨진 패턴을 발견하는 과정을 Data Mining이라고 함.
+
+1. Examples of Applications
+
+대표적인 ML 응용:
+
+- Image Classification
+- Semantic Segmentation : 한 장의 사진 안에 있는 모든 픽셀을 보고, 각 픽셀이 무슨 종류인지(라벨)를 붙여서 구역을 나누는 기술
+- Text Classification
+- Text Summarization
+- Regression : 회귀 (숫자를 맞히는 기술)
+- Speech Recognition : 음성인식
+- Clustering : 이상탐지
+- Dimensionality Reduction : 차원 축소 (정보가 너무 많아서 복잡할 때, 중요한 것만 남기고 정리해서 더 단순하게 만드는 방법)
+- Recommender System : 추천 시스템
+- Reinforcement Learning : 강화학습
+
+1. Types of Machine Learning Systems
+    
+    4-1. Traning Supervision
+    
+    - Supervised Learning : Label이 있는 데이터로 학습 ( Classification, Regression)
+    - Unsupervised Learning : Label이 없는 데이터에서 패턴을 찾음 ( Clustering, Visualization, Dimensionality Reduction )
+    - Semi-Supervised Learning : 소량의 labeled data + 대량의 unlabeled data 사용
+    - Self-Supervised Learning : Unlabeled data에서 학습용 label을 자동으로 만들어 학습
+    - Reinforcement Learning : Agent가 environment에서 action을 수행하고 reward 또는 penalty를 받으며 최적의 policy를 학습.
+    
+    4-2. Batch Versus Online Learning
+    
+    - Batch Learning : 전체 데이터를 한꺼번에 학습, 새로운 데이터가 생기면 전체 데이터로 다시 학습해야 함
+        
+        → 시간이 지나 실제 데이터가 변하면서 모델 성능이 떨어지는 현상을 Data Drift / Model Rot이라고 함.
+        
+    - Online Learning : 새로운 데이터를 instance 또는 mini-batch 단위로 받아 incrementally 학습, 빠르게 변하는 환경이나 매우 큰 dataset에 적합
+    - Out-of-Core Learning : 데이터가 메모리에 다 들어가지 않을 때 일부씩 읽어서 순차적으로 학습하는 방식.
+    
+    4-3. Instance-Based Versus Model-Based Learning
+    
+    - Instance-Based Learning : Training instance를 기억하고 새로운 데이터를 기존 데이터와 similarity 비교하여 예측 (K-NN)
+    - Model-Based Learning : Training data에서 패턴을 학습해 model을 만들고 그 model로 새로운 데이터를 예측.
+        
+        기본 흐름: Study Data → Select Model → Train Model → Make Predictions
+        
+        Training에서는 보통 cost/loss function을 최소화하는 model parameter를 찾음
+        
+2. Main Challenges of Machine Learning
+    
+    5-1. Insufficient Quantity of Training Data
+    
+    데이터가 너무 적으면 모델이 일반적인 패턴을 충분히 학습하기 어려움.
+    
+    복잡한 문제일수록 많은 training data가 필요함.
+    
+    5-2. Nonrepresentative Training Data
+    
+    Training data가 실제 예측할 데이터를 제대로 대표하지 못하면 generalization이 어려움.
+    
+    - Sampling Noise: 표본이 너무 작아 우연히 편향됨
+    - Sampling Bias: 데이터 수집 방법 자체가 편향됨
+    
+    5-3. Poor-Quality Data
+    
+    Errors, noise, outliers, missing values가 많으면 학습이 어려워짐.
+    
+    따라서 Data Cleaning이 중요함.
+    
+    5-4. Irrelevant Features
+    
+    불필요한 feature가 너무 많으면 모델 성능이 떨어질 수 있음.
+    
+    Feature Engineering
+    
+    - Feature Selection
+    - Feature Extraction
+    - Creating New Features
+    
+    5-5. Overfitting the Training Data
+    
+    Training data에서는 성능이 좋지만 새로운 데이터에서는 성능이 나쁜 상태.
+    
+    해결:
+    
+    - 모델 단순화
+    - Regularization
+        
+        모델을 제한하여 지나치게 복잡해지는 것을 막는 방법.
+        
+        Regularization 정도는 **hyperparameter**로 조절함.
+        
+        - Model parameter: training 과정에서 학습
+        - Hyperparameter: training 전에 설정
+    - 데이터 증가
+    - Noise 제거
+    
+    5-6. Underfitting the Training Data
+    
+    모델이 너무 단순해서 training data의 기본적인 패턴조차 제대로 학습하지 못하는 상태.
+    
+    해결:
+    
+    - 더 강력한 모델 사용
+    - 더 좋은 feature 사용
+    - Regularization 감소
+    
+    5-7. Deployment Issues
+    
+    좋은 모델을 만들었더라도 실제 배포 과정에서 문제가 발생할 수 있음.
+    
+    예:
+    
+    - 모델이 너무 큼
+    - 속도가 너무 느림
+    - 유지보수가 어려움
+    - Security 문제
+    - 시간이 지나 모델이 outdated됨
+    
+    이러한 운영 문제를 다루는 분야가 MLOps.
+    
+    5-8. Stepping Back
+    
+    Chapter 1 핵심:
+    
+    - ML = 데이터로부터 학습
+    - Supervised / Unsupervised 등 여러 학습 방식 존재
+    - Batch / Online 방식 존재
+    - Instance-Based / Model-Based 방식 존재
+    - Bad Data와 Bad Model이 성능 저하의 핵심 원인
+    - 목표는 training data가 아니라 새로운 데이터에 generalize하는 것
+
+6. Testing and Validating
+
+모델이 새로운 데이터에서도 잘 작동하는지 평가해야 함.
+
+- Training Set : 모델을 학습하는 데이터
+- Test Set : 최종 모델의 generalization error를 평가하는 데이터
+    
+                      Training error는 낮은데 test error가 높다면 → Overfitting.
+    
+    6-1. Hyperparameter Tuning and Model Selection
+    
+    - Validation Set : Model selection과 hyperparameter tuning에 사용
+        
+        구조 : 
+        
+        Training Set → 모델 학습
+        
+        Validation Set → Model / Hyperparameter 선택
+        
+        Test Set → 최종 성능 평가
+        
+    - Cross-Validation : 여러 validation set을 번갈아 사용해 모델 성능을 반복 평가하고 평균을 냄
+        
+        장점 : 더 정확한 성능 추정
+        
+        단점 : Training 시간이 증가
+        
+    
+    6-2. Data Mismatch
+    
+    Training data와 실제 production data의 특성이 다를 때 발생.
+    
+    ex ) Trainig : 인터넷 사진 / Production : 스마트폰 사진
+    
+    이때 Train-Dev Set을 사용하면 원인을 구분할 수 있음
+    
+    - Train-dev에서도 성능 낮음 → Overfitting
+    - Train-dev는 좋은데 Validation 성능 낮음 → Data Mismatch
+    
+    6-3. No Free Lunch Theorem
+    
+    모든 dataset에서 항상 가장 좋은 하나의 ML algorithm은 없음.
+    
+    모델을 선택한다는 것은 데이터에 대해 특정한 가정을 하는 것.
+    
+    따라서 실제로는 여러 합리적인 모델을 비교하여 가장 적합한 모델을 선택해야 함
